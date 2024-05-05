@@ -21,3 +21,10 @@
 ![alt text](https://github.com/berk2k/Smart-Bed/blob/main/workflow/oracle.JPG)<br/>
 # Graph Visualization
 ![alt text](https://github.com/berk2k/Smart-Bed/blob/main/workflow/graph.JPG)<br/>
+
+# Future Prospects
+Idea: Provide a QR code or URL where a patient's information is accessible on a browser.​<br/>
+Implementation: HTML file that uses values from database to generate a graph​<br/>
+Purpose: Nurse have a visual of patient behavior​<br/>
+Results: Create patterns and draw conclusions<br/>
+![alt text](https://github.com/berk2k/Smart-Bed/blob/main/workflow/futurep.JPG)
