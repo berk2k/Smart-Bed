@@ -1,5 +1,10 @@
 # Smart-Bed 
-
+# What Are Smart Beds in Health Care?
+Advanced hospital beds with technology designed to monitor, record and adjust to the patient’ needs automatically without manual intervention </br>
+# Key Features
+1- Sensors
+2- Automated Adjustments
+3- Data Integration
 # Problem​ 
 -Patients spend 49-98% of their time in their bed. ​</br>
 -Lack of mobility -> long list of health issues​​</br>
