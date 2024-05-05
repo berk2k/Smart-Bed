@@ -19,3 +19,5 @@
 ![alt text](https://github.com/berk2k/Smart-Bed/blob/main/workflow/imp2.JPG)<br/>
 # Oracle Integration
 ![alt text](https://github.com/berk2k/Smart-Bed/blob/main/workflow/oracle.JPG)<br/>
+# Graph Visualization
+![alt text](https://github.com/berk2k/Smart-Bed/blob/main/workflow/graph.JPG)<br/>
