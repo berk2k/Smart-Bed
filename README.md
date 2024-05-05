@@ -10,4 +10,4 @@
 -Alert nurse of patient activity​</br>
 -Save and analyze data</br>
 # System Workflow
-![image](https://github.com/berk2k/Smart-Bed/blob/main/workflow/System Workflow.JPG)<br/>
+![alt text](https://github.com/berk2k/Smart-Bed/blob/main/workflow/System Workflow.JPG)<br/>
