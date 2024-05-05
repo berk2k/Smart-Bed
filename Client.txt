@@ -1,0 +1,242 @@
+from m5stack import *
+from m5ui import *
+from uiflow import *
+import ntptime
+import urequests
+import time
+import socket
+
+
+setScreenColor(0x222222)
+
+label0 = M5TextBox(53, 31, "", lcd.FONT_DejaVu24, 0xFFFFFF, rotate=0)
+label1 = M5TextBox(53, 74, "", lcd.FONT_Default, 0xFFFFFF, rotate=0)
+label2 = M5TextBox(53, 112, "", lcd.FONT_Default, 0xFFFFFF, rotate=0)
+label5 = M5TextBox(53, 151, "", lcd.FONT_Default, 0xFFFFFF, rotate=0)
+label6 = M5TextBox(53, 189, "", lcd.FONT_Default, 0xFFFFFF, rotate=0)
+label0.setText('sending request...')
+
+smartbed1 = 905
+
+
+
+ntp = ntptime.client(host='cn.pool.ntp.org', timezone=8)
+try:
+    # Make HTTP GET request
+    req = urequests.request(method='GET', url='https://fciszjhbmsy6qgt-db1n8ia.adb.us-ashburn-1.oraclecloudapps.com/ords/iot/admission/', 
+    headers={'Content-Type':'application/json'})
+    
+    req_for_patient = urequests.request(method='GET', url='https://fciszjhbmsy6qgt-db1n8ia.adb.us-ashburn-1.oraclecloudapps.com/ords/iot/patient/', 
+    headers={'Content-Type':'application/json'})
+    # Parse JSON response
+    response_json = req.json()
+    response_json_patient = req_for_patient.json()
+    
+    # Extract BEDID values
+    bed_ids = [entry.get('bedid', None) for entry in response_json.get('items', [])]
+    
+    #GET PATIENT WHERE BEDID = smartbed
+    patient1 = [entry.get('patientid', None) for entry in response_json.get('items', []) if entry.get('bedid', None) == smartbed1]
+    
+    #GET patient name where patient id = patient1
+    patient_name = [entry.get('first_name', None) for entry in response_json_patient.get('items', []) if entry.get('patient_id', None) == patient1[0]]
+  
+    gc.collect()
+    req.close()
+except Exception as e:
+    # Print error message if request fails
+    label0.setText(e)
+    print('Error:', e)
+
+def oracletimestamp():
+  global x, month, day, hour, minute, strmonth, second, strday, strhour, strminute, strsecond
+  month = ntp.month()
+  day = ntp.day()
+  hour = ntp.hour()
+  minute = ntp.minute()
+  second = ntp.second()
+  if month < 10:
+    strmonth = (str('0') + str(str(month)))
+  else:
+    strmonth = str(month)
+  if day < 10:
+    strday = (str('0') + str(str(day)))
+  else:
+    strday = str(day)
+  if hour < 10:
+    strhour = (str('0') + str(str(hour)))
+  else:
+    strhour = str(hour)
+  if minute < 10:
+    strminute = (str('0') + str(str(minute)))
+  else:
+    strminute = str(minute)
+  if second < 10:
+    strsecond = (str('0') + str(str(second)))
+  else:
+    strsecond = str(second)
+  return (str((ntp.year())) + str(((str('-') + str(((str(strmonth) + str(((str('-') + str(((str(strday) + str(((str('T') + str(((str(strhour) + str(((str(':') + str(((str(strminute) + str(((str(':') + str(((str(strsecond) + str('Z'))))))))))))))))))))))))))))))))
+
+
+x = 0
+tmp = 0
+
+
+  
+def buttonA_wasPressed():
+
+    label1.setText('Patient is laying on their left')
+    try:
+        req = urequests.request(method='POST', url='https://fciszjhbmsy6qgt-db1n8ia.adb.us-ashburn-1.oraclecloudapps.com/ords/iot/bedlog/', 
+        json={'BEDID': smartbed1, 'PATIENTPOSITION': 'LEFT', 'POSITIONDURATION': tmp - 0, 'LOGTIME': oracletimestamp()}, 
+        headers={'Content-Type':'application/json'})
+        
+        label5.setText('Database updated successfully')
+        
+        gc.collect()
+        req.close()
+    except Exception as e:
+        label5.setText('Failed: {}'.format(e))
+        
+def buttonB_wasPressed():
+
+    label1.setText('Patient is laying on their back')
+    try:
+        req = urequests.request(method='POST', url='https://fciszjhbmsy6qgt-db1n8ia.adb.us-ashburn-1.oraclecloudapps.com/ords/iot/bedlog/', 
+        json={'BEDID': smartbed1, 'PATIENTPOSITION': 'BACK', 'POSITIONDURATION': tmp - 0, 'LOGTIME': oracletimestamp()}, 
+        headers={'Content-Type':'application/json'})
+        
+        label5.setText('Database successfully updated')
+        
+        gc.collect()
+        req.close()
+    except Exception as e:
+        label5.setText('Failed: {}'.format(e))
+        
+def buttonC_wasPressed():
+
+    label1.setText('Patient is laying on their right')
+    try:
+        req = urequests.request(method='POST', url='https://fciszjhbmsy6qgt-db1n8ia.adb.us-ashburn-1.oraclecloudapps.com/ords/iot/bedlog/', 
+        json={'BEDID': smartbed1, 'PATIENTPOSITION': 'RIGHT', 'POSITIONDURATION': tmp - 0, 'LOGTIME': oracletimestamp()}, 
+        headers={'Content-Type':'application/json'})
+        
+        label5.setText('Database successfully updated')
+        
+        gc.collect()
+        req.close()
+    except Exception as e:
+        label5.setText('Failed: {}'.format(e))
+position = "BACK"
+sent_data_flag = False  # Flag to indicate if data has been sent
+
+while True:
+    x = (x if isinstance(x, int) else 0) + 1
+    label0.setText('time: ' + str(x))
+
+    if btnA.wasPressed():
+        tmp = x
+        x = 0
+        buttonA_wasPressed()
+        position = "LEFT"
+        rgb.setColorAll(0x000000)
+        label6.setText('')
+
+
+    if btnB.wasPressed():
+        tmp = x
+        x = 0
+        buttonB_wasPressed()
+        position = "BACK"
+        rgb.setColorAll(0x000000)
+        label6.setText('')
+
+
+    if btnC.wasPressed():
+        tmp = x
+        x = 0
+        buttonC_wasPressed()
+        position = "RIGHT"
+        rgb.setColorAll(0x000000)
+        label6.setText('')
+
+Check if x exceeds 5 and data has not been sent yet
+    if x > 5 and not sent_data_flag:
+        remoteInit()
+        sendsmartbed = smartbed1
+        sendpatientname = patient_name[0]
+        parser = '|'
+        sendposition = position
+        sendP2PData('4D835F7A', str(str(sendsmartbed) + parser + sendpatientname + parser + sendposition))
+        rgb.setColorAll(0xff0000)
+        sent_data_flag = True  # Set the flag to indicate that data has been sent
+
+Check if x resets
+    if x == 0:
+        sent_data_flag = False  # Reset the flag
+
+    wait(1) 
+
+position = "BACK"
+while True:
+  
+  x = (x if isinstance(x, int) else 0) + 1
+  label0.setText('time: '+str(x))
+  
+  if btnA.wasPressed():
+    tmp = x
+    x = 0
+    buttonA_wasPressed()
+    position = "LEFT"
+    rgb.setColorAll(0x000000)
+    label6.setText('')
+    
+    
+  if btnB.wasPressed():
+    tmp = x
+    x = 0
+    buttonB_wasPressed()
+    position = "BACK"
+    rgb.setColorAll(0x000000)
+    label6.setText('')
+    
+    
+  if btnC.wasPressed():
+    tmp = x
+    x = 0
+    buttonC_wasPressed()
+    position = "RIGHT"
+    rgb.setColorAll(0x000000)
+    label6.setText('')
+    
+  #sleep
+  if x > 10:
+    remoteInit()
+    sendsmartbed = smartbed1
+    sendpatientname = patient_name[0]
+    parser = '|'
+    sendposition = position
+    #label0.setText('SENDING')
+    sendP2PData('4D835F7A', str(str(sendsmartbed)+parser+sendpatientname+parser+sendposition))
+    wait_ms(200)
+    #label2.setText("Room Number: "+ str(smartbed1))
+    #label5.setText('Patient Name: ' + patient_name[0])
+    rgb.setColorAll(0xff0000)
+    #speaker.tone(1800, 200)
+    #label6.setText('Patient Position: ' +str(position))
+    
+  wait(1)
+  wait_ms(2)
+
+  
+
+
+# Call buttonA_wasPressed function and pass max_id as argument
+# btnA.wasPressed(lambda: buttonA_wasPressed(max_id))
+
+
+
+
+
+
+
