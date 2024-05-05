@@ -11,5 +11,4 @@
 -Save and analyze data</br>
 # System Workflow
 ![alt text](https://github.com/berk2k/Smart-Bed/blob/main/workflow/SystemWorkflow.JPG)<br/>
-# M5 Simulation
 ![alt text](https://github.com/berk2k/Smart-Bed/blob/main/workflow/M5.JPG)<br/>
