@@ -9,3 +9,5 @@
 -Monitor patient movement ​</br>
 -Alert nurse of patient activity​</br>
 -Save and analyze data</br>
+# System Workflow
+![image](https://github.com/berk2k/Smart-Bed/blob/master/workflow/System Workflow.JPG)<br/>
