@@ -17,3 +17,5 @@
 ![alt text](https://github.com/berk2k/Smart-Bed/blob/main/workflow/imp1.JPG)<br/>
 # Implementation2
 ![alt text](https://github.com/berk2k/Smart-Bed/blob/main/workflow/imp2.JPG)<br/>
+# Oracle Integration
+![alt text](https://github.com/berk2k/Smart-Bed/blob/main/workflow/oracle.JPG)<br/>
