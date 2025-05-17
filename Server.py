@@ -18,6 +18,9 @@ while True:
     received_data = getP2PData()
     
     if received_data is not None:
+        # Turn on all LEDs red when data is received
+        rgb.setColorAll(0xff0000)
+        
         # Split received string by '|' character into components
         parsed_data = received_data.split('|')
         
@@ -34,6 +37,9 @@ while True:
             # If the data format is incorrect
             print("Invalid data format received:", received_data)
     else:
+        # Turn off LEDs when no data is received
+        rgb.setColorAll(0x000000)
+        
         # No data received, show waiting message
         label0.setText("No data received")
 
