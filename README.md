@@ -1,19 +1,29 @@
-# Smart-Bed 
-# What Are Smart Beds in Health Care?
-Advanced hospital beds with technology designed to monitor, record and adjust to the patient’ needs automatically without manual intervention </br>
-# Key Features
-1- Sensors
-2- Automated Adjustments
-3- Data Integration
-# Problem​ 
--Patients spend 49-98% of their time in their bed. ​</br>
--Lack of mobility -> long list of health issues​​</br>
--Pressure ulcers  -> 54.8% chance of developing pressure ulcers after undergoing surgery.​</br>
-# Product Idea 
--Create a smart bed with pressure sensors ​</br>
--Monitor patient movement ​</br>
--Alert nurse of patient activity​</br>
--Save and analyze data</br>
+# 🛏️ Smart Bed
+
+## 🤖 What Are Smart Beds in Health Care?
+Advanced hospital beds equipped with technology designed to monitor, record, and automatically adjust to the patient’s needs without manual intervention.
+
+---
+
+## ⭐ Key Features
+- 🛠️ **Sensors:** Detect patient presence and movement.
+- 🔄 **Automated Adjustments:** Bed adjusts position to enhance patient comfort and reduce risk.
+- 📊 **Data Integration:** Seamless communication with hospital systems for real-time monitoring.
+
+---
+
+## ⚠️ Problem
+- Patients spend **49-98%** of their time in bed.
+- 🚫 Lack of mobility can lead to a long list of health complications.
+- 🩹 Risk of pressure ulcers is significant — **54.8%** chance of developing pressure ulcers after surgery.
+
+---
+
+## 💡 Product Idea
+- Develop a smart bed with integrated pressure sensors.
+- 👣 Monitor patient movements continuously.
+- 📢 Alert nurses promptly on patient activity changes.
+- 💾 Save and analyze patient data for improved care.
 # System Workflow
 ![alt text](https://github.com/berk2k/Smart-Bed/blob/main/workflow/SystemWorkflow.JPG)<br/>
 ![alt text](https://github.com/berk2k/Smart-Bed/blob/main/workflow/M5.JPG)<br/>
