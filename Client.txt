@@ -4,239 +4,105 @@ from uiflow import *
 import ntptime
 import urequests
 import time
-import socket
+import gc
 
-
+# ========== Screen Setup and Variables ========== #
 setScreenColor(0x222222)
+label0 = M5TextBox(53, 31, "", lcd.FONT_DejaVu24, 0xFFFFFF)
+label1 = M5TextBox(53, 74, "", lcd.FONT_Default, 0xFFFFFF)
+label2 = M5TextBox(53, 112, "", lcd.FONT_Default, 0xFFFFFF)
+label5 = M5TextBox(53, 151, "", lcd.FONT_Default, 0xFFFFFF)
+label6 = M5TextBox(53, 189, "", lcd.FONT_Default, 0xFFFFFF)
 
-label0 = M5TextBox(53, 31, "", lcd.FONT_DejaVu24, 0xFFFFFF, rotate=0)
-label1 = M5TextBox(53, 74, "", lcd.FONT_Default, 0xFFFFFF, rotate=0)
-label2 = M5TextBox(53, 112, "", lcd.FONT_Default, 0xFFFFFF, rotate=0)
-label5 = M5TextBox(53, 151, "", lcd.FONT_Default, 0xFFFFFF, rotate=0)
-label6 = M5TextBox(53, 189, "", lcd.FONT_Default, 0xFFFFFF, rotate=0)
-label0.setText('sending request...')
+label0.setText('Sending request...')
 
-smartbed1 = 905
+# ========== Constants and Initialization ========== #
+smartbed_id = 905
+position = "BACK"
+time_counter = 0
+last_change_time = 0
+sent_data_flag = False
+parser = '|'
 
-
-
+# ========== NTP Setup ========== #
 ntp = ntptime.client(host='cn.pool.ntp.org', timezone=8)
-try:
-    # Make HTTP GET request
-    req = urequests.request(method='GET', url='https://fciszjhbmsy6qgt-db1n8ia.adb.us-ashburn-1.oraclecloudapps.com/ords/iot/admission/', 
-    headers={'Content-Type':'application/json'})
-    
-    req_for_patient = urequests.request(method='GET', url='https://fciszjhbmsy6qgt-db1n8ia.adb.us-ashburn-1.oraclecloudapps.com/ords/iot/patient/', 
-    headers={'Content-Type':'application/json'})
-    # Parse JSON response
-    response_json = req.json()
-    response_json_patient = req_for_patient.json()
-    
-    # Extract BEDID values
-    bed_ids = [entry.get('bedid', None) for entry in response_json.get('items', [])]
-    
-    #GET PATIENT WHERE BEDID = smartbed
-    patient1 = [entry.get('patientid', None) for entry in response_json.get('items', []) if entry.get('bedid', None) == smartbed1]
-    
-    #GET patient name where patient id = patient1
-    patient_name = [entry.get('first_name', None) for entry in response_json_patient.get('items', []) if entry.get('patient_id', None) == patient1[0]]
-  
-    gc.collect()
-    req.close()
-except Exception as e:
-    # Print error message if request fails
-    label0.setText(e)
-    print('Error:', e)
 
+# ========== Helper Functions ========== #
 def oracletimestamp():
-  global x, month, day, hour, minute, strmonth, second, strday, strhour, strminute, strsecond
-  month = ntp.month()
-  day = ntp.day()
-  hour = ntp.hour()
-  minute = ntp.minute()
-  second = ntp.second()
-  if month < 10:
-    strmonth = (str('0') + str(str(month)))
-  else:
-    strmonth = str(month)
-  if day < 10:
-    strday = (str('0') + str(str(day)))
-  else:
-    strday = str(day)
-  if hour < 10:
-    strhour = (str('0') + str(str(hour)))
-  else:
-    strhour = str(hour)
-  if minute < 10:
-    strminute = (str('0') + str(str(minute)))
-  else:
-    strminute = str(minute)
-  if second < 10:
-    strsecond = (str('0') + str(str(second)))
-  else:
-    strsecond = str(second)
-  return (str((ntp.year())) + str(((str('-') + str(((str(strmonth) + str(((str('-') + str(((str(strday) + str(((str('T') + str(((str(strhour) + str(((str(':') + str(((str(strminute) + str(((str(':') + str(((str(strsecond) + str('Z'))))))))))))))))))))))))))))))))
+    def pad(n): return f"{n:02}"
+    return f"{ntp.year()}-{pad(ntp.month())}-{pad(ntp.day())}T{pad(ntp.hour())}:{pad(ntp.minute())}:{pad(ntp.second())}Z"
 
-
-x = 0
-tmp = 0
-
-
-  
-def buttonA_wasPressed():
-
-    label1.setText('Patient is laying on their left')
+def get_patient_name(bed_id):
     try:
-        req = urequests.request(method='POST', url='https://fciszjhbmsy6qgt-db1n8ia.adb.us-ashburn-1.oraclecloudapps.com/ords/iot/bedlog/', 
-        json={'BEDID': smartbed1, 'PATIENTPOSITION': 'LEFT', 'POSITIONDURATION': tmp - 0, 'LOGTIME': oracletimestamp()}, 
-        headers={'Content-Type':'application/json'})
-        
-        label5.setText('Database updated successfully')
-        
-        gc.collect()
-        req.close()
-    except Exception as e:
-        label5.setText('Failed: {}'.format(e))
-        
-def buttonB_wasPressed():
+        admission = urequests.get('https://fciszjhbmsy6qgt-db1n8ia.adb.us-ashburn-1.oraclecloudapps.com/ords/iot/admission/').json()
+        patients = urequests.get('https://fciszjhbmsy6qgt-db1n8ia.adb.us-ashburn-1.oraclecloudapps.com/ords/iot/patient/').json()
 
-    label1.setText('Patient is laying on their back')
+        patient_ids = [a.get('patientid') for a in admission['items'] if a.get('bedid') == bed_id]
+        if not patient_ids:
+            return None
+
+        patient = next((p.get('first_name') for p in patients['items'] if p.get('patient_id') == patient_ids[0]), None)
+        return patient
+
+    except Exception as e:
+        label0.setText(f"Error: {e}")
+        return None
+
+def send_position(position):
     try:
-        req = urequests.request(method='POST', url='https://fciszjhbmsy6qgt-db1n8ia.adb.us-ashburn-1.oraclecloudapps.com/ords/iot/bedlog/', 
-        json={'BEDID': smartbed1, 'PATIENTPOSITION': 'BACK', 'POSITIONDURATION': tmp - 0, 'LOGTIME': oracletimestamp()}, 
-        headers={'Content-Type':'application/json'})
-        
-        label5.setText('Database successfully updated')
-        
-        gc.collect()
-        req.close()
+        data = {
+            'BEDID': smartbed_id,
+            'PATIENTPOSITION': position,
+            'POSITIONDURATION': time_counter,
+            'LOGTIME': oracletimestamp()
+        }
+        res = urequests.post('https://fciszjhbmsy6qgt-db1n8ia.adb.us-ashburn-1.oraclecloudapps.com/ords/iot/bedlog/', json=data, headers={'Content-Type': 'application/json'})
+        res.close()
+        label5.setText("Database updated")
     except Exception as e:
-        label5.setText('Failed: {}'.format(e))
-        
-def buttonC_wasPressed():
+        label5.setText(f"Failed: {e}")
 
-    label1.setText('Patient is laying on their right')
+def notify_remote(position, patient_name):
     try:
-        req = urequests.request(method='POST', url='https://fciszjhbmsy6qgt-db1n8ia.adb.us-ashburn-1.oraclecloudapps.com/ords/iot/bedlog/', 
-        json={'BEDID': smartbed1, 'PATIENTPOSITION': 'RIGHT', 'POSITIONDURATION': tmp - 0, 'LOGTIME': oracletimestamp()}, 
-        headers={'Content-Type':'application/json'})
-        
-        label5.setText('Database successfully updated')
-        
-        gc.collect()
-        req.close()
-    except Exception as e:
-        label5.setText('Failed: {}'.format(e))
-position = "BACK"
-sent_data_flag = False  # Flag to indicate if data has been sent
-
-while True:
-    x = (x if isinstance(x, int) else 0) + 1
-    label0.setText('time: ' + str(x))
-
-    if btnA.wasPressed():
-        tmp = x
-        x = 0
-        buttonA_wasPressed()
-        position = "LEFT"
-        rgb.setColorAll(0x000000)
-        label6.setText('')
-
-
-    if btnB.wasPressed():
-        tmp = x
-        x = 0
-        buttonB_wasPressed()
-        position = "BACK"
-        rgb.setColorAll(0x000000)
-        label6.setText('')
-
-
-    if btnC.wasPressed():
-        tmp = x
-        x = 0
-        buttonC_wasPressed()
-        position = "RIGHT"
-        rgb.setColorAll(0x000000)
-        label6.setText('')
-
-Check if x exceeds 5 and data has not been sent yet
-    if x > 5 and not sent_data_flag:
         remoteInit()
-        sendsmartbed = smartbed1
-        sendpatientname = patient_name[0]
-        parser = '|'
-        sendposition = position
-        sendP2PData('4D835F7A', str(str(sendsmartbed) + parser + sendpatientname + parser + sendposition))
+        message = f"{smartbed_id}{parser}{patient_name}{parser}{position}"
+        sendP2PData('4D835F7A', message)
         rgb.setColorAll(0xff0000)
-        sent_data_flag = True  # Set the flag to indicate that data has been sent
+    except Exception as e:
+        label6.setText(f"Notify error: {e}")
 
-Check if x resets
-    if x == 0:
-        sent_data_flag = False  # Reset the flag
+# ========== Button Definitions ========== #
+def handle_button(position_str):
+    global position, last_change_time, time_counter, sent_data_flag
+    label1.setText(f"Patient is laying on their {position_str.lower()}")
+    send_position(position_str)
+    last_change_time = time_counter
+    time_counter = 0
+    position = position_str
+    sent_data_flag = False
+    rgb.setColorAll(0x000000)
+    label6.setText("")
 
-    wait(1) 
+btnA.wasPressed(lambda: handle_button("LEFT"))
+btnB.wasPressed(lambda: handle_button("BACK"))
+btnC.wasPressed(lambda: handle_button("RIGHT"))
 
-position = "BACK"
+# ========== Get Patient Information ========== #
+patient_name = get_patient_name(smartbed_id)
+if patient_name:
+    label2.setText("Patient: " + patient_name)
+else:
+    label2.setText("No patient found")
+
+# ========== Main Loop ========== #
 while True:
-  
-  x = (x if isinstance(x, int) else 0) + 1
-  label0.setText('time: '+str(x))
-  
-  if btnA.wasPressed():
-    tmp = x
-    x = 0
-    buttonA_wasPressed()
-    position = "LEFT"
-    rgb.setColorAll(0x000000)
-    label6.setText('')
-    
-    
-  if btnB.wasPressed():
-    tmp = x
-    x = 0
-    buttonB_wasPressed()
-    position = "BACK"
-    rgb.setColorAll(0x000000)
-    label6.setText('')
-    
-    
-  if btnC.wasPressed():
-    tmp = x
-    x = 0
-    buttonC_wasPressed()
-    position = "RIGHT"
-    rgb.setColorAll(0x000000)
-    label6.setText('')
-    
-  #sleep
-  if x > 10:
-    remoteInit()
-    sendsmartbed = smartbed1
-    sendpatientname = patient_name[0]
-    parser = '|'
-    sendposition = position
-    #label0.setText('SENDING')
-    sendP2PData('4D835F7A', str(str(sendsmartbed)+parser+sendpatientname+parser+sendposition))
-    wait_ms(200)
-    #label2.setText("Room Number: "+ str(smartbed1))
-    #label5.setText('Patient Name: ' + patient_name[0])
-    rgb.setColorAll(0xff0000)
-    #speaker.tone(1800, 200)
-    #label6.setText('Patient Position: ' +str(position))
-    
-  wait(1)
-  wait_ms(2)
+    time_counter += 1
+    label0.setText(f"time: {time_counter}")
 
-  
+    # Automatically send data after inactivity period
+    if time_counter > 10 and not sent_data_flag:
+        if patient_name:
+            notify_remote(position, patient_name)
+            sent_data_flag = True
 
-
-# Call buttonA_wasPressed function and pass max_id as argument
-# btnA.wasPressed(lambda: buttonA_wasPressed(max_id))
-
-
-
-
-
-
-
+    wait(1)
